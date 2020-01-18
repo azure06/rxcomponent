@@ -156,7 +156,22 @@ export class RxComponent implements Component {
   }
 
   public updateStyle(style: Partial<CSSStyleDeclaration>) {
-    const { width, height } = utils.applyStyle(this._target, style);
+    const { transform } = this._target.style;
+    const { transform: targetTransform } = style;
+    const rotate =
+      (/rotate\(.*deg\)/g.exec(targetTransform || '') || [])[0] ||
+      (/rotate\(.*deg\)/g.exec(transform) || [])[0] ||
+      '';
+
+    const scale =
+      (/scale\(.*?\)/g.exec(targetTransform || '') || [])[0] ||
+      (/scale\(.*?\)/g.exec(transform) || [])[0] ||
+      '';
+
+    const { width, height } = utils.applyStyle(this._target, {
+      ...style,
+      transform: scale + rotate
+    });
     this._rxFrame.updateStyle({ width, height });
     this.updateAnchorsStyle({ width, height });
     this.updateRotationAnchorStyle({ width, height });

@@ -90,12 +90,58 @@ const scale = (
   const { width, height } = target.getBoundingClientRect();
   const offsetX = args.to.clientX - args.from.clientX;
   const offsetY = args.to.clientY - args.from.clientY;
-  const targetWidth = width + 2 * offsetX;
-  const targetHeight = height + 2 * offsetY;
-  return {
-    scaleX: targetWidth / width || 1,
-    scaleY: targetHeight / height || 1
-  };
+  const targetWidthR = width + 2 * offsetX;
+  const targetHeightR = height + 2 * offsetY;
+  const targetWidthL = width + 2 * -offsetX;
+  const targetHeightL = height + 2 * -offsetY;
+
+  switch (args.position) {
+    case 'top-left':
+      return {
+        scaleX: targetWidthL / width || 1,
+        scaleY: targetHeightL / height || 1
+      };
+    case 'top-center':
+      return {
+        scaleX: 1,
+        scaleY: targetHeightL / height || 1
+      };
+    case 'top-right':
+      return {
+        scaleX: targetWidthR / width || 1,
+        scaleY: targetHeightL / height || 1
+      };
+    case 'center-left':
+      return {
+        scaleX: targetWidthL / width || 1,
+        scaleY: targetHeightL / height || 1
+      };
+    case 'center':
+      return {
+        scaleX: 1,
+        scaleY: 1
+      };
+    case 'center-right':
+      return {
+        scaleX: targetWidthR / width || 1,
+        scaleY: targetHeightR / height || 1
+      };
+    case 'bottom-left':
+      return {
+        scaleX: targetWidthL / width || 1,
+        scaleY: targetHeightR / height || 1
+      };
+    case 'bottom-center':
+      return {
+        scaleX: 1,
+        scaleY: targetHeightR / height || 1
+      };
+    case 'bottom-right':
+      return {
+        scaleX: targetWidthR / width || 1,
+        scaleY: targetHeightR / height || 1
+      };
+  }
 };
 
 const scaleTransform = ({
@@ -106,7 +152,7 @@ const scaleTransform = ({
   scaleY: number;
 }): Partial<CSSStyleDeclaration> => {
   return {
-    transform: `scale(${scaleX}, ${scaleY})`
+    transform: `scale(${scaleX}, ${scaleY}) `
   };
 };
 

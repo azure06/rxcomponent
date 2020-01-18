@@ -67,6 +67,7 @@ class RxRotationHandler {
       }))
     );
   }
+
   public onDrag(target: HTMLElement) {
     return this._onDrag().pipe(
       map(([from, to]) => {
@@ -541,11 +542,9 @@ export class RxHandler
       filter(_ => this.options.scalable),
       // @ts-ignore
       map(value => utils.scale(this.rxComponent.target, value)),
-      scan((acc, value) => ({
-        // @ts-ignore
+      scan((acc, value: any) => ({
         scaleX: acc.scaleX * value.scaleX,
-        // @ts-ignore
-        scaleY: acc.scaleY * value.scaleY
+        scaleY: acc.scaleY * value.scaleY,
       })),
       // @ts-ignore
       ...args,
