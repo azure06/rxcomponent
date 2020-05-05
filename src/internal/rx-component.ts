@@ -1,4 +1,5 @@
-import { Component, Vector, Vertices } from './types';
+import { Component, ComponentOptions, Vector, Vertices } from './types';
+import { RxHandler } from '../main';
 import { Side } from './types';
 import { Subject, combineLatest } from 'rxjs';
 import {
@@ -21,6 +22,7 @@ const defaultStyle = {
   position: 'absolute',
   borderRadius: '2px',
   boxShadow: '0px 0px 5px 2px rgba(50,130,200,0.75)',
+  zIndex: '-1',
 };
 
 const anchorsStyle = {
@@ -119,12 +121,12 @@ export class RxComponent implements Component {
   private moveSubject = new Subject<Vector>();
   private resizeSubject = new Subject<Vector>();
   private transformAsObservable = combineLatest(
-    this.warpSubject.asObservable().pipe(startWith('')),
-    this.scaleSubject.asObservable().pipe(startWith('')),
     combineLatest(
       this.moveSubject.asObservable().pipe(startWith([0, 0] as Vector)),
       this.resizeSubject.asObservable().pipe(startWith([0, 0] as Vector))
     ).pipe(map(([t1, t2]) => translateToCss(add(t1, t2)))),
+    this.warpSubject.asObservable().pipe(startWith('')),
+    this.scaleSubject.asObservable().pipe(startWith('')),
     this.rotationSubject.asObservable().pipe(startWith(''))
   );
 
@@ -182,20 +184,26 @@ export class RxComponent implements Component {
     this._rxFrame.setFocus(value);
   }
 
-  public changeVisibility(visibility: 'visible' | 'hidden') {
-    this.rxFrame.updateStyle({
-      visibility,
+  public changeVisibility(rxHanldler: RxHandler) {
+    const frameVisible = rxHanldler.interactive && rxHanldler.draggable;
+    const anchorVisible =
+      rxHanldler.interactive &&
+      (rxHanldler.warpable || rxHanldler.resizable || rxHanldler.scalable);
+    const rotationAnchorVisible = rxHanldler.interactive && rxHanldler.rotable;
+
+    const toVisibility = (value: boolean) => ({
+      visibility: value ? 'visible' : 'hidden',
     });
+
+    this.rxFrame.updateStyle(toVisibility(frameVisible));
+
     this.rxAnchors.forEach((anchorSet) =>
       anchorSet.forEach((anchor) =>
-        anchor.updateStyle({
-          visibility,
-        })
+        anchor.updateStyle(toVisibility(anchorVisible))
       )
     );
-    this.rxRotationAnchor.updateStyle({
-      visibility,
-    });
+
+    this.rxRotationAnchor.updateStyle(toVisibility(rotationAnchorVisible));
   }
 
   public updateStyle(style: Partial<CSSStyleDeclaration>) {

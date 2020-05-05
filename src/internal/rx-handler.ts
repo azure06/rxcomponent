@@ -137,9 +137,7 @@ export class RxHandler {
       rxComponent.rxRotationAnchor
     );
 
-    this.rxComponent.changeVisibility(
-      options.interactive ? 'visible' : 'hidden'
-    );
+    this.rxComponent.changeVisibility(this);
     this.subscribeAll();
   }
 
@@ -185,7 +183,8 @@ export class RxHandler {
         interactive === undefined ? this.options.interactive : interactive,
       rotable: rotable === undefined ? this.options.rotable : rotable,
     };
-    this.rxComponent.changeVisibility(this.interactive ? 'visible' : 'hidden');
+
+    this.rxComponent.changeVisibility(this);
   }
 
   public onDragStart(arg: (from: Vector) => void) {
@@ -405,11 +404,9 @@ export class RxHandler {
   public onFocus(arg: (arg: MouseEvent) => void) {
     const onBlur_ = onFocus(this.rxComponent.target).pipe(
       distinctUntilChanged(),
-      tap(arg),
       filter((_) => this.options.interactive),
-      tap(() => {
-        this.rxComponent.setFocus(true);
-      })
+      tap(() => this.rxComponent.setFocus(true)),
+      tap(arg)
     );
     this.rxSubscriber.subscribeTo('focus', onBlur_);
     return this;
@@ -417,9 +414,9 @@ export class RxHandler {
 
   public onBlur(arg: (arg: MouseEvent) => void) {
     const onBlur_ = onBlur(this.rxComponent.target).pipe(
-      tap((value) => arg(value)),
       filter((_) => this.options.interactive),
-      tap(() => this.rxComponent.setFocus(false))
+      tap(() => this.rxComponent.setFocus(false)),
+      tap((value) => arg(value))
     );
     this.rxSubscriber.subscribeTo('blur', onBlur_);
     return this;
