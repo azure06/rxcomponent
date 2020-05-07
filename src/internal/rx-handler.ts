@@ -137,7 +137,7 @@ export class RxHandler {
       rxComponent.rxRotationAnchor
     );
 
-    this.rxComponent.changeVisibility(this);
+    this.rxComponent.changeAnchorsVisibility(this);
     this.subscribeAll();
   }
 
@@ -184,7 +184,7 @@ export class RxHandler {
       rotable: rotable === undefined ? this.options.rotable : rotable,
     };
 
-    this.rxComponent.changeVisibility(this);
+    this.rxComponent.changeAnchorsVisibility(this);
   }
 
   public onDragStart(arg: (from: Vector) => void) {
@@ -401,29 +401,28 @@ export class RxHandler {
     return this;
   }
 
-  public onFocus(arg: (arg: MouseEvent) => void) {
-    const onBlur_ = onFocus(this.rxComponent.target).pipe(
+  public onFocus(arg?: (arg: MouseEvent) => void) {
+    const onFocus_ = onFocus(this.rxComponent.target).pipe(
       distinctUntilChanged(),
       filter((_) => this.options.interactive),
-      tap(() => this.rxComponent.setFocus(true)),
-      tap(arg)
+      tap(arg ? arg : () => this.rxComponent.setFocus(true))
     );
-    this.rxSubscriber.subscribeTo('focus', onBlur_);
+    this.rxSubscriber.subscribeTo('focus', onFocus_);
     return this;
   }
 
-  public onBlur(arg: (arg: MouseEvent) => void) {
+  public onBlur(arg?: (arg: MouseEvent) => void) {
     const onBlur_ = onBlur(this.rxComponent.target).pipe(
       filter((_) => this.options.interactive),
-      tap(() => this.rxComponent.setFocus(false)),
-      tap((value) => arg(value))
+      tap(arg ? arg : () => this.rxComponent.setFocus(false))
     );
     this.rxSubscriber.subscribeTo('blur', onBlur_);
     return this;
   }
 
   private subscribeAll(arg = () => {}) {
-    this.onBlur(arg)
+    this.onBlur()
+      .onFocus()
       .onDrag(tap(arg))
       .onDragStart(arg)
       .onDragStart(arg)

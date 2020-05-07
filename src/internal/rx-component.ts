@@ -100,6 +100,10 @@ export class RxFrame implements Component {
     this._target.hidden = !focus;
   }
 
+  public get focussed() {
+    return !this._target.hidden;
+  }
+
   public get target() {
     return this._target;
   }
@@ -180,19 +184,23 @@ export class RxComponent implements Component {
     return this._rxRotationAnchor;
   }
 
-  public setFocus(value: boolean) {
-    this._rxFrame.setFocus(value);
+  public get focused() {
+    return this.rxFrame.focussed;
   }
 
-  public changeVisibility(rxHanldler: RxHandler) {
-    const frameVisible = rxHanldler.interactive && rxHanldler.draggable;
+  public setFocus(value: boolean) {
+    this.rxFrame.setFocus(value);
+  }
+
+  public changeAnchorsVisibility(rxHandler: RxHandler) {
+    const frameVisible = rxHandler.draggable;
     const anchorVisible =
-      rxHanldler.interactive &&
-      (rxHanldler.warpable || rxHanldler.resizable || rxHanldler.scalable);
-    const rotationAnchorVisible = rxHanldler.interactive && rxHanldler.rotable;
+      rxHandler.warpable || rxHandler.resizable || rxHandler.scalable;
+    const rotationAnchorVisible = rxHandler.rotable;
 
     const toVisibility = (value: boolean) => ({
-      visibility: value ? 'visible' : 'hidden',
+      visibility:
+        rxHandler.interactive && this.focused && value ? 'visible' : 'hidden',
     });
 
     this.rxFrame.updateStyle(toVisibility(frameVisible));
