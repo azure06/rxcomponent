@@ -1,2 +1,2 @@
-export { RxComponent } from './internal/rx-component';
-export { RxHandler } from './internal/rx-handler';
+export { RxComponent } from './internal/rxcomponent';
+export { RxHandler } from './internal/rxhandler';

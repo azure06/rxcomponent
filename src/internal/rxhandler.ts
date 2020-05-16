@@ -11,8 +11,8 @@ import {
   RxAnchor2D,
   RxComponent,
   RxRotationAnchor,
-} from './rx-component';
-import { RxSubscriber } from './rx-subscriber';
+} from './rxcomponent';
+import { RxSubscriber } from './rxsubscriber';
 import {
   add,
   centerFromVertices,

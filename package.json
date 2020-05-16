@@ -1,42 +1,56 @@
 {
-    "name": "rx-component",
-    "version": "0.0.1",
-    "private": true,
-    "scripts": {
-        "start": "rollup -c -w",
-        "lint": "eslint . --ext .js.ts --ignore-path .gitignore .",
-        "lintfix": "eslint --fix --ext .js,.ts --ignore-path .gitignore ."
-    },
-    "keywords": [],
-    "license": "MIT",
-    "author": "Gabriele Sato",
-    "main": "dist/bundle.js",
-    "dependencies": {
-        "rxjs": "^6.5.3"
-    },
-    "devDependencies": {
-        "@typescript-eslint/eslint-plugin": "^2.30.0",
-        "@typescript-eslint/parser": "^2.30.0",
-        "eslint": "^6.8.0",
-        "eslint-config-prettier": "^6.11.0",
-        "eslint-plugin-prettier": "^3.1.3",
-        "eslint-plugin-sort-imports-es6-autofix": "^0.5.0",
-        "husky": "^4.2.5",
-        "prettier": "^2.0.5",
-        "rollup": "^1.27.6",
-        "rollup-plugin-json": "^4.0.0",
-        "rollup-plugin-node-resolve": "^5.2.0",
-        "rollup-plugin-terser": "^5.1.3",
-        "rollup-plugin-typescript2": "^0.25.2",
-        "typescript": "^3.8.3"
-    },
-    "husky": {
-        "hooks": {
-            "pre-commit": "npm run lintfix"
-        }
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/azure06/rx-component.git"
+  "name": "@azure06/rxcomponent",
+  "version": "0.0.3",
+  "private": false,
+  "author": "Gabriele Sato",
+  "main": "lib/main.js",
+  "description": "Description Drag Resize Rotate Warp any element inside an Html page",
+  "types": "lib/main.d.ts",
+  "keywords": [
+    "drag",
+    "warp",
+    "resize",
+    "warp",
+    "scale",
+    "rotate",
+    "textarea"
+  ],
+  "scripts": {
+    "start": "rollup -c -w",
+    "build": "rollup -c",
+    "lint": "eslint . --ext .js.ts --ignore-path .gitignore .",
+    "lintfix": "eslint --fix --ext .js,.ts --ignore-path .gitignore ."
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "rxjs": "^6.5.3"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^2.30.0",
+    "@typescript-eslint/parser": "^2.30.0",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-prettier": "^3.1.3",
+    "eslint-plugin-sort-imports-es6-autofix": "^0.5.0",
+    "husky": "^4.2.5",
+    "prettier": "^2.0.5",
+    "rollup": "^1.27.6",
+    "rollup-plugin-json": "^4.0.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-peer-deps-external": "^2.2.2",
+    "rollup-plugin-terser": "^5.1.3",
+    "rollup-plugin-typescript2": "^0.25.2",
+    "typescript": "^3.8.3"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lintfix"
     }
+  },
+  "license": "MIT",
+  "homepage": "https://rxcanvas.netlify.app/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/azure06/rxcomponent.git/"
+  }
 }
