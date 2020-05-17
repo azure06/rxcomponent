@@ -4,9 +4,13 @@
 
 **Move** **Resize** **Warp** **Scale** **Rotate** any element in inside a page.
 
+## Demo 
+   [Stackbliz](  https://stackblitz.com/edit/typescript-4hbnwf)
+
+
 ## Get Started
 
-### npm
+### With npm
 
 ```sh
  npm install rxjs
