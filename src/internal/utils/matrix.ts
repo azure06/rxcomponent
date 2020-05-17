@@ -7,7 +7,7 @@ import { Vertices } from '../types';
  * @returns true if is square matrix
  */
 function isSquareMatrix(matrix: number[][]) {
-  return matrix.every((row) => row.length === matrix.length);
+  return matrix.every(row => row.length === matrix.length);
 }
 
 /**
@@ -64,9 +64,9 @@ function add(matrix: number[][], from: number, to: number, factor: number) {
   return matrix.map((row, rowIndex) =>
     rowIndex === to
       ? row.map(
-          (value, index) => matrix[to][index] + matrix[from][index] * factor
+          (value, index) => matrix[to][index] + matrix[from][index] * factor,
         )
-      : row
+      : row,
   );
 }
 
@@ -80,7 +80,7 @@ function add(matrix: number[][], from: number, to: number, factor: number) {
  */
 function divide(matrix: number[][], targetRow: number, divider: number) {
   return matrix.map((row, rowIndex) =>
-    rowIndex === targetRow ? row.map((value) => (value /= divider)) : row
+    rowIndex === targetRow ? row.map(value => (value /= divider)) : row,
   );
 }
 
@@ -108,12 +108,12 @@ function transpose(matrix: number[][]) {
  * @returns Result of multiplication
  */
 function multiply(matrixA: number[][], matrixB: number[][]) {
-  return !matrixA.every((row) => row.length === matrixB[0].length)
+  return !matrixA.every(row => row.length === matrixB[0].length)
     ? matrixB
-    : matrixB.map((col) =>
-        matrixA.map((row) =>
-          row.reduce((acc, value, index) => col[index] * value + acc, 0)
-        )
+    : matrixB.map(col =>
+        matrixA.map(row =>
+          row.reduce((acc, value, index) => col[index] * value + acc, 0),
+        ),
       );
 }
 
@@ -179,7 +179,7 @@ function gj(matrixA: number[][], matrixB: number[][]) {
  */
 function invert(
   matrix: number[][],
-  inverseMatrix: number[][] = createIdentityMatrix(matrix.length)
+  inverseMatrix: number[][] = createIdentityMatrix(matrix.length),
 ) {
   return isSquareMatrix(matrix) ? gj(matrix, inverseMatrix) : [];
 }

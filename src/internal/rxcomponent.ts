@@ -112,7 +112,7 @@ export class RxFrame implements Component {
 export type RxAnchor2D = [
   [RxAnchor, RxAnchor, RxAnchor],
   [RxAnchor, RxAnchor, RxAnchor],
-  [RxAnchor, RxAnchor, RxAnchor]
+  [RxAnchor, RxAnchor, RxAnchor],
 ];
 
 export class RxComponent implements Component {
@@ -127,16 +127,16 @@ export class RxComponent implements Component {
   private transformAsObservable = combineLatest(
     combineLatest(
       this.moveSubject.asObservable().pipe(startWith([0, 0] as Vector)),
-      this.resizeSubject.asObservable().pipe(startWith([0, 0] as Vector))
+      this.resizeSubject.asObservable().pipe(startWith([0, 0] as Vector)),
     ).pipe(map(([t1, t2]) => translateToCss(add(t1, t2)))),
     this.warpSubject.asObservable().pipe(startWith('')),
     this.scaleSubject.asObservable().pipe(startWith('')),
-    this.rotationSubject.asObservable().pipe(startWith(''))
+    this.rotationSubject.asObservable().pipe(startWith('')),
   );
 
   constructor(
     private readonly _target: HTMLElement,
-    style: Partial<CSSStyleDeclaration>
+    style: Partial<CSSStyleDeclaration>,
   ) {
     // prettier-ignore
     this._rxAnchors = [
@@ -153,17 +153,17 @@ export class RxComponent implements Component {
       this.updateStyle({
         ...style,
         position: 'relative',
-      })
+      }),
     );
 
     // apply Transform to Css
     this.transformAsObservable
       .pipe(
-        tap((props) =>
+        tap(props =>
           this.updateStyle({
-            transform: props.filter((prop) => !!prop).join(' '),
-          })
-        )
+            transform: props.filter(prop => !!prop).join(' '),
+          }),
+        ),
       )
       .subscribe();
   }
@@ -205,10 +205,10 @@ export class RxComponent implements Component {
 
     this.rxFrame.updateStyle(toVisibility(frameVisible));
 
-    this.rxAnchors.forEach((anchorSet) =>
-      anchorSet.forEach((anchor) =>
-        anchor.updateStyle(toVisibility(anchorVisible))
-      )
+    this.rxAnchors.forEach(anchorSet =>
+      anchorSet.forEach(anchor =>
+        anchor.updateStyle(toVisibility(anchorVisible)),
+      ),
     );
 
     this.rxRotationAnchor.updateStyle(toVisibility(rotationAnchorVisible));
@@ -229,7 +229,7 @@ export class RxComponent implements Component {
       this.updateStyle({
         width: `${width + offsetX}px`,
         height: `${height + offsetY}px`,
-      })
+      }),
     );
   }
 

@@ -51,7 +51,7 @@ class RxRotationHandler {
 
   public onDragStart() {
     return dragStart(this.rxRotationAnchor.target).pipe(
-      map(mouseEventToVector)
+      map(mouseEventToVector),
     );
   }
 
@@ -69,7 +69,7 @@ class RxRotationHandler {
       map(([from, to]): [Vector, Vector, Vector] => {
         const center = centerFromVertices(verticesFromViewPort(target));
         return [center, from, to];
-      })
+      }),
     );
   }
 }
@@ -79,45 +79,45 @@ class RxAnchorsHandler {
 
   private mergeComponents<T, R>(
     event: (target: EventTarget) => Observable<T>,
-    transform: (rxAnchor: RxAnchor) => OperatorFunction<T, R>
+    transform: (rxAnchor: RxAnchor) => OperatorFunction<T, R>,
   ) {
     const events = this.rxAnchors
       .reduce((acc, value) => [...acc, ...value], [] as RxAnchor[])
-      .map((anchor) => event(anchor.target).pipe(transform(anchor)));
+      .map(anchor => event(anchor.target).pipe(transform(anchor)));
     return merge(...events);
   }
 
   public onDragStart() {
-    return this.mergeComponents(dragStart, (anchor) =>
+    return this.mergeComponents(dragStart, anchor =>
       map((mouseEvent): [Side, Vector] => [
         anchor.position,
         mouseEventToVector(mouseEvent),
-      ])
+      ]),
     );
   }
 
   public onDragEnd() {
-    return this.mergeComponents(dragEnd, (anchor) =>
+    return this.mergeComponents(dragEnd, anchor =>
       map((mouseEvent): [Side, Vector] => [
         anchor.position,
         mouseEventToVector(mouseEvent),
-      ])
+      ]),
     );
   }
 
   public onDragStatus() {
-    return this.mergeComponents(dragStatus, (anchor) =>
-      map((status): [Side, 'up' | 'down'] => [anchor.position, status])
+    return this.mergeComponents(dragStatus, anchor =>
+      map((status): [Side, 'up' | 'down'] => [anchor.position, status]),
     );
   }
 
   public onDrag() {
-    return this.mergeComponents(drag, (anchor) =>
+    return this.mergeComponents(drag, anchor =>
       map(([from, to]): [Side, Vector, Vector] => [
         anchor.position,
         mouseEventToVector(from),
         mouseEventToVector(to),
-      ])
+      ]),
     );
   }
 }
@@ -130,11 +130,11 @@ export class RxHandler {
 
   constructor(
     private readonly rxComponent: RxComponent,
-    private options: ComponentOptions
+    private options: ComponentOptions,
   ) {
     this.rxAnchorsHandler = new RxAnchorsHandler(rxComponent.rxAnchors);
     this.rxRotationHandler = new RxRotationHandler(
-      rxComponent.rxRotationAnchor
+      rxComponent.rxRotationAnchor,
     );
 
     this.rxComponent.changeAnchorsVisibility(this);
@@ -191,10 +191,10 @@ export class RxHandler {
     this.rxSubscriber.subscribeTo(
       'dragstart',
       dragStart(this.rxComponent.target).pipe(
-        filter((_) => this.draggable),
+        filter(_ => this.draggable),
         map(mouseEventToVector),
-        tap(arg)
-      )
+        tap(arg),
+      ),
     );
     return this;
   }
@@ -203,29 +203,29 @@ export class RxHandler {
     this.rxSubscriber.subscribeTo(
       'dragend',
       dragEnd(this.rxComponent.target).pipe(
-        filter((_) => this.draggable),
+        filter(_ => this.draggable),
         map(mouseEventToVector),
-        tap(arg)
-      )
+        tap(arg),
+      ),
     );
     return this;
   }
 
   public onDrag(
-    operator: OperatorFunction<[Vector, Vector], [Vector, Vector]>
+    operator: OperatorFunction<[Vector, Vector], [Vector, Vector]>,
   ) {
     this.dragObservable = drag(this.rxComponent.target).pipe(
-      filter((_) => this.draggable),
+      filter(_ => this.draggable),
       withLatestFrom(
         combineLatest([
           this.rxAnchorsHandler.onDragStatus().pipe(
             startWith([null, null]),
-            map(([_, status]) => status)
+            map(([_, status]) => status),
           ),
           this.rxRotationHandler.onDragStatus().pipe(startWith(null)),
-        ])
+        ]),
       ),
-      filter(([_, tail]) => tail.every((status) => !status || status === 'up')),
+      filter(([_, tail]) => tail.every(status => !status || status === 'up')),
       map(([[from, to]]): [Vector, Vector] => [
         mouseEventToVector(from),
         mouseEventToVector(to),
@@ -236,9 +236,9 @@ export class RxHandler {
           acc = add(acc, subtract(from, to));
           return acc;
         },
-        [0, 0] as Vector
+        [0, 0] as Vector,
       ),
-      tap((args) => this.rxComponent.translate(args))
+      tap(args => this.rxComponent.translate(args)),
     );
     this.rxSubscriber.subscribeTo('ondrag', this.dragObservable);
     return this;
@@ -246,8 +246,8 @@ export class RxHandler {
 
   public onResizeStart(arg: (arg: [Side, Vector]) => void) {
     const onResize = this.rxAnchorsHandler.onDragStart().pipe(
-      filter((_) => this.resizable),
-      tap(arg)
+      filter(_ => this.resizable),
+      tap(arg),
     );
     this.rxSubscriber.subscribeTo('resizestart', onResize);
     return this;
@@ -255,18 +255,18 @@ export class RxHandler {
 
   public onResizeEnd(arg: (arg: [Side, Vector]) => void) {
     const onResize = this.rxAnchorsHandler.onDragEnd().pipe(
-      filter((_) => this.resizable),
-      tap(arg)
+      filter(_ => this.resizable),
+      tap(arg),
     );
     this.rxSubscriber.subscribeTo('resizeend', onResize);
     return this;
   }
 
   public onResize(
-    operator: OperatorFunction<[Side, Vector, Vector], [Side, Vector, Vector]>
+    operator: OperatorFunction<[Side, Vector, Vector], [Side, Vector, Vector]>,
   ) {
     const onResize = this.rxAnchorsHandler.onDrag().pipe(
-      filter((_) => this.resizable),
+      filter(_ => this.resizable),
       operator,
       scan(
         ([_, translation], [side, from, to]) =>
@@ -274,9 +274,9 @@ export class RxHandler {
         [
           [0, 0],
           [0, 0],
-        ] as [Vector, Vector]
+        ] as [Vector, Vector],
       ),
-      tap((args) => this.rxComponent.resize(args))
+      tap(args => this.rxComponent.resize(args)),
     );
     this.rxSubscriber.subscribeTo('resize', onResize);
     return this;
@@ -284,8 +284,8 @@ export class RxHandler {
 
   public onScaleStart(arg: (arg: [Side, Vector]) => void) {
     const onScaleStart = this.rxAnchorsHandler.onDragStart().pipe(
-      filter((_) => this.scalable),
-      tap(arg)
+      filter(_ => this.scalable),
+      tap(arg),
     );
     this.rxSubscriber.subscribeTo('scalestart', onScaleStart);
     return this;
@@ -293,8 +293,8 @@ export class RxHandler {
 
   public onScaleEnd(arg: (arg: [Side, Vector]) => void) {
     const onScaleEnd = this.rxAnchorsHandler.onDragEnd().pipe(
-      filter((_) => this.scalable),
-      tap(arg)
+      filter(_ => this.scalable),
+      tap(arg),
     );
     this.rxSubscriber.subscribeTo('scaleend', onScaleEnd);
     return this;
@@ -302,23 +302,23 @@ export class RxHandler {
 
   public onScale(operator: OperatorFunction<Vector, Vector>) {
     const onScale = this.rxAnchorsHandler.onDrag().pipe(
-      filter((_) => this.scalable),
+      filter(_ => this.scalable),
       map(([side, from, to]) =>
         scale(
           verticesFromViewPort(this.rxComponent.target),
           side,
-          subtract(from, to)
-        )
+          subtract(from, to),
+        ),
       ),
       scan(
         ([xScale, yScale]: Vector, [xK, yK]): Vector => [
           xScale * xK,
           yScale * yK,
         ],
-        [1, 1]
+        [1, 1],
       ),
       operator,
-      tap((values) => this.rxComponent.scale(values))
+      tap(values => this.rxComponent.scale(values)),
     );
     this.rxSubscriber.subscribeTo('scale', onScale);
     return this;
@@ -326,33 +326,33 @@ export class RxHandler {
 
   public onWarpStart(arg: (arg: [Side, Vector]) => void) {
     const onWarp = this.rxAnchorsHandler.onDragStart().pipe(
-      filter((_) => this.scalable),
-      tap(arg)
+      filter(_ => this.scalable),
+      tap(arg),
     );
     this.rxSubscriber.subscribeTo('warpstart', onWarp);
     return this;
   }
   public onWarpEnd(arg: (arg: [Side, Vector]) => void) {
     const onWarp = this.rxAnchorsHandler.onDragEnd().pipe(
-      filter((_) => this.scalable),
-      tap(arg)
+      filter(_ => this.scalable),
+      tap(arg),
     );
     this.rxSubscriber.subscribeTo('warpend', onWarp);
     return this;
   }
 
   public onWarp(
-    operator: OperatorFunction<[Vertices, Vertices], [Vertices, Vertices]>
+    operator: OperatorFunction<[Vertices, Vertices], [Vertices, Vertices]>,
   ) {
     const onWarp = this.rxAnchorsHandler.onDrag().pipe(
-      filter((_) => this.warpable),
+      filter(_ => this.warpable),
       scan((acc, [side, from, to]) => {
         acc[side] = acc[side]
           ? add(acc[side], subtract(from, to))
           : subtract(from, to);
         return acc;
       }, {} as { [key in Side]: Vector }),
-      map((verticesDist) => {
+      map(verticesDist => {
         const [width, height] = size(verticesFromCss(this.rxComponent.target));
         const from: Vertices = [
           [0, 0],
@@ -364,7 +364,7 @@ export class RxHandler {
         return [from, to] as [Vertices, Vertices];
       }),
       operator,
-      tap((args) => this.rxComponent.warp(...args))
+      tap(args => this.rxComponent.warp(...args)),
     );
     this.rxSubscriber.subscribeTo('warp', onWarp);
     return this;
@@ -372,8 +372,8 @@ export class RxHandler {
 
   public onRotationStart(arg: (arg: Vector) => void) {
     const onRotationStart = this.rxRotationHandler.onDragStart().pipe(
-      filter((_) => this.rotable),
-      tap(arg)
+      filter(_ => this.rotable),
+      tap(arg),
     );
     this.rxSubscriber.subscribeTo('rotationstart', onRotationStart);
     return this;
@@ -388,14 +388,14 @@ export class RxHandler {
     operator: OperatorFunction<
       [Vector, Vector, Vector],
       [Vector, Vector, Vector]
-    >
+    >,
   ) {
     const onRotation = this.rxRotationHandler
       .onDrag(this.rxComponent.target)
       .pipe(
-        filter((_) => this.rotable),
+        filter(_ => this.rotable),
         operator,
-        tap(([center, _, to]) => this.rxComponent.rotate(center, to))
+        tap(([center, _, to]) => this.rxComponent.rotate(center, to)),
       );
     this.rxSubscriber.subscribeTo('rotation', onRotation);
     return this;
@@ -404,15 +404,15 @@ export class RxHandler {
   public onFocus(arg?: (arg: MouseEvent) => void) {
     const onFocus_ = onFocus(this.rxComponent.target).pipe(
       distinctUntilChanged(),
-      filter((_) => this.options.interactive),
+      filter(_ => this.options.interactive),
       tap(
         arg
           ? arg
           : () => {
               this.rxComponent.setFocus(true);
               this.rxComponent.changeAnchorsVisibility(this);
-            }
-      )
+            },
+      ),
     );
     this.rxSubscriber.subscribeTo('focus', onFocus_);
     return this;
@@ -420,15 +420,15 @@ export class RxHandler {
 
   public onBlur(arg?: (arg: MouseEvent) => void) {
     const onBlur_ = onBlur(this.rxComponent.target).pipe(
-      filter((_) => this.options.interactive),
+      filter(_ => this.options.interactive),
       tap(
         arg
           ? arg
           : () => {
               this.rxComponent.setFocus(false);
               this.rxComponent.changeAnchorsVisibility(this);
-            }
-      )
+            },
+      ),
     );
     this.rxSubscriber.subscribeTo('blur', onBlur_);
     return this;

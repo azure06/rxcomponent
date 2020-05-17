@@ -65,7 +65,7 @@ export function dragEnd(target: EventTarget) {
 export function dragStatus(target: EventTarget) {
   return merge(
     mouseDown(target).pipe(mapTo('down')),
-    mouseReleased({ targetUp: document, targetDown: target }).pipe(mapTo('up'))
+    mouseReleased({ targetUp: document, targetDown: target }).pipe(mapTo('up')),
   ) as Observable<'up' | 'down'>;
 }
 
@@ -84,8 +84,8 @@ export function drag(target: EventTarget) {
     filter(
       ([previousEvent, currentEvent]) =>
         previousEvent.clientX !== currentEvent.clientX ||
-        previousEvent.clientY !== currentEvent.clientY
-    )
+        previousEvent.clientY !== currentEvent.clientY,
+    ),
   );
 }
 
@@ -100,11 +100,11 @@ export function onBlur(target: EventTarget) {
     withLatestFrom(
       merge(
         mouseEnter(target).pipe(mapTo('focus')),
-        mouseLeave(target).pipe(mapTo('blur'))
-      )
+        mouseLeave(target).pipe(mapTo('blur')),
+      ),
     ),
     distinctUntilChanged(([_p, prev], [_c, current]) => prev === current),
     filter(([mouseEvent, status]) => status === 'blur'),
-    map(([mouseEvent]) => mouseEvent)
+    map(([mouseEvent]) => mouseEvent),
   );
 }

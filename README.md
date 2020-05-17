@@ -21,6 +21,7 @@
 
 ```ts
 import { RxComponent, RxHandler } from '@azure06/rxcomponent';
+import { tap } from "rxjs/operators";
 
 const appDiv: HTMLElement = document.getElementById("app");
 

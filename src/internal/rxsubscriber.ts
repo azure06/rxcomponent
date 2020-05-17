@@ -19,7 +19,7 @@ export class RxSubscriber {
   ) {
     return observables.reduce(
       (subscription, observer) => subscription.add(observer.subscribe()),
-      observable.subscribe()
+      observable.subscribe(),
     );
   }
 
@@ -28,7 +28,7 @@ export class RxSubscriber {
     ...subscriptions: Subscription[]
   ) {
     if (subscription) {
-      [subscription, ...subscriptions].forEach((sub) => sub.unsubscribe());
+      [subscription, ...subscriptions].forEach(sub => sub.unsubscribe());
     }
   }
 }

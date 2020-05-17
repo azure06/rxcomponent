@@ -182,7 +182,7 @@ export function translateToCss([x, y]: Vector) {
 
 export function matrixToCss(matrix: number[][]) {
   return `translate(-50%, -50%) matrix3d(${matrix
-    .flatMap((row) => row.map((value) => +value.toFixed(10)))
+    .flatMap(row => row.map(value => +value.toFixed(10)))
     .join(',')}) translate(50%, 50%)`;
 }
 
