@@ -97,11 +97,11 @@ export class RxFrame implements Component {
   }
 
   public setFocus(focus: boolean) {
-    this._target.hidden = !focus;
+    this._target.style.visibility = focus ? 'visible' : 'hidden';
   }
 
   public get focussed() {
-    return !this._target.hidden;
+    return this._target.style.visibility === 'visible';
   }
 
   public get target() {

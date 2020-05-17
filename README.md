@@ -16,26 +16,27 @@
 ## Usage
 
 ```ts
-import { RxComponent, RxHandler } from 'rxcomponent';
+import { RxComponent, RxHandler } from '@azure06/rxcomponent';
 
-const rxComponent = new RxComponent(
-  document.querySelector('#rxcomponent') as HTMLElement,
-  {
-    width: '260px',
-    height: '90px',
-  }
-);
+const appDiv: HTMLElement = document.getElementById("app");
+
+const rxComponent = new RxComponent(appDiv, {
+  width: "200px",
+  height: "80px"
+});
+
 const rxHandler = new RxHandler(rxComponent, {
   draggable: true,
   rotable: true,
-  resizable: false,
-  interactive: true,
+  resizable: true,
+  interactive: true
 });
 
 rxHandler
-  .onDrag(tap((_) => console.log('Dragging!🔥')))
-  .onResize(tap((_) => console.log('Resizing!')))
-  .onRotation(tap((_) => console.log('Rotating!')));
+  .onDrag(tap(_ => console.log("Dragging!🔥")))
+  .onResize(tap(_ => console.log("Resizing")))
+  .onRotation(tap(_ => console.log("Rotating")));
+
 ```
 
 **RxComponent** is [MIT licensed](LICENSE).

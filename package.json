@@ -1,11 +1,14 @@
 {
   "name": "@azure06/rxcomponent",
-  "version": "0.0.3",
+  "version": "0.0.3-3",
   "private": false,
   "author": "Gabriele Sato",
-  "main": "lib/main.js",
   "description": "Description Drag Resize Rotate Warp any element inside an Html page",
+  "main": "lib/main.js",
   "types": "lib/main.d.ts",
+  "files": [
+    "lib"
+  ],
   "keywords": [
     "drag",
     "warp",

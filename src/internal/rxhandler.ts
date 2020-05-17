@@ -405,7 +405,14 @@ export class RxHandler {
     const onFocus_ = onFocus(this.rxComponent.target).pipe(
       distinctUntilChanged(),
       filter((_) => this.options.interactive),
-      tap(arg ? arg : () => this.rxComponent.setFocus(true))
+      tap(
+        arg
+          ? arg
+          : () => {
+              this.rxComponent.setFocus(true);
+              this.rxComponent.changeAnchorsVisibility(this);
+            }
+      )
     );
     this.rxSubscriber.subscribeTo('focus', onFocus_);
     return this;
@@ -414,7 +421,14 @@ export class RxHandler {
   public onBlur(arg?: (arg: MouseEvent) => void) {
     const onBlur_ = onBlur(this.rxComponent.target).pipe(
       filter((_) => this.options.interactive),
-      tap(arg ? arg : () => this.rxComponent.setFocus(false))
+      tap(
+        arg
+          ? arg
+          : () => {
+              this.rxComponent.setFocus(false);
+              this.rxComponent.changeAnchorsVisibility(this);
+            }
+      )
     );
     this.rxSubscriber.subscribeTo('blur', onBlur_);
     return this;
