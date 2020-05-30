@@ -1,10 +1,4 @@
-import {
-  ComponentOptions,
-  Resizable,
-  Scalable,
-  Vertices,
-  Warpable,
-} from './types';
+import { ComponentOptions, Resizable, Scalable, Warpable } from './types';
 import { Observable, OperatorFunction, combineLatest, merge, of } from 'rxjs';
 import {
   RxAnchor,
@@ -14,22 +8,16 @@ import {
 } from './rxcomponent';
 import { RxSubscriber } from './rxsubscriber';
 import {
-  add,
   centerFromVertices,
   mouseEventToVector,
-  resize,
   scale,
-  size,
   subtract,
-  verticesFromCss,
-  verticesFromDistance,
   verticesFromViewPort,
 } from './utils/vector';
 import {
   distinctUntilChanged,
   filter,
   map,
-  scan,
   startWith,
   tap,
   withLatestFrom,
@@ -126,7 +114,7 @@ export class RxHandler {
   private readonly rxAnchorsHandler: RxAnchorsHandler;
   private readonly rxRotationHandler: RxRotationHandler;
   private readonly rxSubscriber: RxSubscriber = new RxSubscriber();
-  private dragObservable?: Observable<Vector>;
+  private dragObservable?: Observable<[Vector, Vector]>;
 
   constructor(
     private readonly rxComponent: RxComponent,
@@ -231,14 +219,7 @@ export class RxHandler {
         mouseEventToVector(to),
       ]),
       operator,
-      scan(
-        (acc, [from, to]) => {
-          acc = add(acc, subtract(from, to));
-          return acc;
-        },
-        [0, 0] as Vector,
-      ),
-      tap(args => this.rxComponent.translate(args)),
+      tap(([from, to]) => this.rxComponent.move(subtract(from, to))),
     );
     this.rxSubscriber.subscribeTo('ondrag', this.dragObservable);
     return this;
@@ -268,15 +249,9 @@ export class RxHandler {
     const onResize = this.rxAnchorsHandler.onDrag().pipe(
       filter(_ => this.resizable),
       operator,
-      scan(
-        ([_, translation], [side, from, to]) =>
-          resize(side, translation, subtract(from, to)),
-        [
-          [0, 0],
-          [0, 0],
-        ] as [Vector, Vector],
+      tap(([side, from, to]) =>
+        this.rxComponent.resize(side, subtract(from, to)),
       ),
-      tap(args => this.rxComponent.resize(args)),
     );
     this.rxSubscriber.subscribeTo('resize', onResize);
     return this;
@@ -310,13 +285,6 @@ export class RxHandler {
           subtract(from, to),
         ),
       ),
-      scan(
-        ([xScale, yScale]: Vector, [xK, yK]): Vector => [
-          xScale * xK,
-          yScale * yK,
-        ],
-        [1, 1],
-      ),
       operator,
       tap(values => this.rxComponent.scale(values)),
     );
@@ -342,29 +310,14 @@ export class RxHandler {
   }
 
   public onWarp(
-    operator: OperatorFunction<[Vertices, Vertices], [Vertices, Vertices]>,
+    operator: OperatorFunction<[Side, Vector, Vector], [Side, Vector, Vector]>,
   ) {
     const onWarp = this.rxAnchorsHandler.onDrag().pipe(
       filter(_ => this.warpable),
-      scan((acc, [side, from, to]) => {
-        acc[side] = acc[side]
-          ? add(acc[side], subtract(from, to))
-          : subtract(from, to);
-        return acc;
-      }, {} as { [key in Side]: Vector }),
-      map(verticesDist => {
-        const [width, height] = size(verticesFromCss(this.rxComponent.target));
-        const from: Vertices = [
-          [0, 0],
-          [0, height],
-          [width, 0],
-          [width, height],
-        ];
-        const to: Vertices = verticesFromDistance(from, verticesDist);
-        return [from, to] as [Vertices, Vertices];
-      }),
       operator,
-      tap(args => this.rxComponent.warp(...args)),
+      tap(([side, from, to]) =>
+        this.rxComponent.warp(side, subtract(from, to)),
+      ),
     );
     this.rxSubscriber.subscribeTo('warp', onWarp);
     return this;
@@ -379,7 +332,10 @@ export class RxHandler {
     return this;
   }
   public onRotationEnd(arg: (arg: Vector) => void) {
-    const onRotationEnd = this.rxRotationHandler.onDragEnd();
+    const onRotationEnd = this.rxRotationHandler.onDragEnd().pipe(
+      filter(_ => this.rotable),
+      tap(arg),
+    );
     this.rxSubscriber.subscribeTo('rotationend', onRotationEnd);
     return this;
   }

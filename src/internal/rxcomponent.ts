@@ -1,21 +1,24 @@
 import { Component, ComponentOptions, Vector, Vertices } from './types';
 import { RxHandler } from '../main';
 import { Side } from './types';
-import { Subject, combineLatest } from 'rxjs';
+import { Subject, Subscription, combineLatest, merge } from 'rxjs';
 import {
   add,
   applyCss,
   cursorByPosition,
   matrixToCss,
+  resize,
   rotate,
   rotateToCss,
   scaleToCss,
   size,
   translateToCss,
   verticesFromCss,
+  verticesFromDistance,
 } from './utils/vector';
 import { create3DMatrix } from './utils/matrix';
 import { map, startWith, tap } from 'rxjs/operators';
+import { scan } from 'rxjs/operators';
 
 const defaultStyle = {
   border: '3px solid #5980FA',
@@ -23,6 +26,7 @@ const defaultStyle = {
   borderRadius: '2px',
   boxShadow: '0px 0px 5px 2px rgba(50,130,200,0.75)',
   zIndex: '-1',
+  boxSizing: 'inherit',
 };
 
 const anchorsStyle = {
@@ -32,6 +36,7 @@ const anchorsStyle = {
   borderRadius: '5px',
   width: '10px',
   height: '10px',
+  boxSizing: 'inherit',
   // boxShadow: '0px 0px 5px 1px rgba(50,130,200,0.75)'
 };
 
@@ -119,20 +124,112 @@ export class RxComponent implements Component {
   private readonly _rxAnchors: RxAnchor2D;
   private readonly _rxRotationAnchor: RxRotationAnchor;
   private readonly _rxFrame: RxFrame;
-  private warpSubject = new Subject<string>();
-  private rotationSubject = new Subject<string>();
-  private scaleSubject = new Subject<string>();
-  private moveSubject = new Subject<Vector>();
-  private resizeSubject = new Subject<Vector>();
-  private transformAsObservable = combineLatest(
-    combineLatest(
-      this.moveSubject.asObservable().pipe(startWith([0, 0] as Vector)),
-      this.resizeSubject.asObservable().pipe(startWith([0, 0] as Vector)),
-    ).pipe(map(([t1, t2]) => translateToCss(add(t1, t2)))),
-    this.warpSubject.asObservable().pipe(startWith('')),
-    this.scaleSubject.asObservable().pipe(startWith('')),
-    this.rotationSubject.asObservable().pipe(startWith('')),
+
+  private readonly moveSubject = new Subject<Vector>();
+  private readonly resizeSubject = new Subject<[Side, Vector]>();
+  private readonly warpSubject = new Subject<[Side, Vector]>();
+  private readonly scaleSubject = new Subject<Vector>();
+
+  private readonly warpCssSubject = new Subject<string>();
+  private readonly rotationCssSubject = new Subject<string>();
+  private readonly scaleCssSubject = new Subject<string>();
+  private readonly moveCssSubject = new Subject<Vector>();
+  private readonly resizeCssSubject = new Subject<Vector>();
+
+  private readonly moveStream = this.moveSubject.asObservable().pipe(
+    scan<Vector>((acc, distance) => add(acc, distance), [0, 0]),
+    tap(args => this.moveCssSubject.next(args)),
   );
+  private readonly resizeStream = this.resizeSubject.asObservable().pipe(
+    scan<[Side, Vector], [Vector, Vector]>(
+      ([_, position], [side, distance]) => resize(side, position, distance),
+      [
+        [0, 0],
+        [0, 0],
+      ],
+    ),
+    tap(([[offsetX, offsetY], distance]) => {
+      const [width, height] = size(verticesFromCss(this.target));
+      this.resizeCssSubject.next(distance);
+      this.applyCommonCss(
+        this.updateStyle({
+          width: `${width + offsetX}px`,
+          height: `${height + offsetY}px`,
+        }),
+      );
+    }),
+  );
+  private readonly warpStream = this.warpSubject.asObservable().pipe(
+    scan<[Side, Vector], { [key in Side]: Vector }>((acc, [side, distance]) => {
+      acc[side] = acc[side] ? add(acc[side], distance) : distance;
+      return acc;
+    }, {} as { [key in Side]: Vector }),
+    map(verticesDist => {
+      const [width, height] = size(verticesFromCss(this.target));
+      const from: Vertices = [
+        [0, 0],
+        [0, height],
+        [width, 0],
+        [width, height],
+      ];
+      const to: Vertices = verticesFromDistance(from, verticesDist);
+      return [from, to] as [Vertices, Vertices];
+    }),
+    tap(([start, end]) => {
+      const matrix = create3DMatrix(start, end);
+      this.warpCssSubject.next(matrixToCss(matrix));
+    }),
+  );
+  private readonly scaleStream = this.scaleSubject.asObservable().pipe(
+    scan<Vector>(([xScale, yScale], [xK, yK]) => [xScale * xK, yScale * yK], [
+      1,
+      1,
+    ]),
+    tap(k => this.scaleCssSubject.next(scaleToCss(k))),
+  );
+  private readonly transformCssStream = combineLatest(
+    combineLatest(
+      this.moveCssSubject.asObservable().pipe(startWith([0, 0] as Vector)),
+      this.resizeCssSubject.asObservable().pipe(startWith([0, 0] as Vector)),
+    ).pipe(map(([t1, t2]) => translateToCss(add(t1, t2)))),
+    this.warpCssSubject.asObservable().pipe(startWith('')),
+    this.scaleCssSubject.asObservable().pipe(startWith('')),
+    this.rotationCssSubject.asObservable().pipe(startWith('')),
+  ).pipe(
+    tap(props =>
+      this.updateStyle({
+        transform: props.filter(prop => !!prop).join(' '),
+      }),
+    ),
+  );
+
+  public move(distance: Vector) {
+    this.moveSubject.next(distance);
+  }
+
+  public resize(side: Side, distance: Vector) {
+    this.resizeSubject.next([side, distance]);
+  }
+
+  public warp(side: Side, distance: Vector) {
+    this.warpSubject.next([side, distance]);
+  }
+
+  public rotate(center: Vector, to: Vector) {
+    this.rotationCssSubject.next(rotateToCss(rotate(center, to)));
+  }
+
+  public scale(k: Vector) {
+    this.scaleSubject.next(k);
+  }
+
+  public readonly subscription: Subscription = merge(
+    this.moveStream,
+    this.resizeStream,
+    this.warpStream,
+    this.scaleStream,
+    this.transformCssStream,
+  ).subscribe();
 
   constructor(
     private readonly _target: HTMLElement,
@@ -149,23 +246,13 @@ export class RxComponent implements Component {
     this._rxFrame = new RxFrame(_target);
 
     // Positioning of anchors and frame
-    this.applyCommonStyle(
+    this.applyCommonCss(
       this.updateStyle({
         ...style,
+        boxSizing: 'border-box',
         position: 'relative',
       }),
     );
-
-    // apply Transform to Css
-    this.transformAsObservable
-      .pipe(
-        tap(props =>
-          this.updateStyle({
-            transform: props.filter(prop => !!prop).join(' '),
-          }),
-        ),
-      )
-      .subscribe();
   }
 
   public get target() {
@@ -218,36 +305,8 @@ export class RxComponent implements Component {
     return applyCss(this._target, style);
   }
 
-  public translate(vector: Vector) {
-    this.moveSubject.next(vector);
-  }
-
-  public resize([[offsetX, offsetY], translate]: [Vector, Vector]) {
-    const [width, height] = size(verticesFromCss(this.target));
-    this.resizeSubject.next(translate);
-    this.applyCommonStyle(
-      this.updateStyle({
-        width: `${width + offsetX}px`,
-        height: `${height + offsetY}px`,
-      }),
-    );
-  }
-
-  public warp(start: Vertices, end: Vertices) {
-    const matrix = create3DMatrix(start, end);
-    this.warpSubject.next(matrixToCss(matrix));
-  }
-
-  public rotate(center: Vector, to: Vector) {
-    this.rotationSubject.next(rotateToCss(rotate(center, to)));
-  }
-
-  public scale(k: Vector) {
-    this.scaleSubject.next(scaleToCss(k));
-  }
-
   // prettier-ignore
-  private applyCommonStyle({ width: widthStr, height: heightStr }: CSSStyleDeclaration) {
+  private applyCommonCss({ width: widthStr, height: heightStr }: CSSStyleDeclaration) {
     const [width, height] = [+widthStr.slice(0, -2), +heightStr.slice(0, -2)];
     // Update anchors
     this._rxAnchors.forEach((set, rowIndex) =>
