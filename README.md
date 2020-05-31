@@ -5,7 +5,8 @@
 **Move** **Resize** **Warp** **Scale** **Rotate** any element in inside a page.
 
 ## Demo 
-   [Stackbliz](  https://stackblitz.com/edit/typescript-4hbnwf)
+   [Stackbliz](https://stackblitz.com/edit/typescript-4hbnwf)
+   [Stackbliz React](https://stackblitz.com/edit/rxcomponent)
 
 
 ## Get Started
